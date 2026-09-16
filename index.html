@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>주식시장 리서치</title>
+  <style>
+    * { box-sizing: border-box; }
+    html { color-scheme: light; }
+    body { margin: 0; background: #ececec; color: #fff; letter-spacing: 0;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+    main { width: 100%; max-width: 640px; margin: 0 auto; background: #630b1c; }
+    .artwork { aspect-ratio: 933 / 1490; overflow: hidden; }
+    .artwork img { display: block; width: 100%; height: auto; }
+    .entry { padding: 16px 26px 32px; text-align: center; }
+    .action { display: flex; align-items: center; justify-content: center;
+      min-height: 56px; width: 100%; padding: 14px 16px;
+      border: 1px solid #fff; border-radius: 4px; background: #fff;
+      color: #540818; font-size: 18px; line-height: 1.5; font-weight: 700;
+      text-decoration: none; overflow-wrap: anywhere; }
+    .action:hover { background: #f1f2f3; }
+    .action:focus-visible { outline: 3px solid #fff; outline-offset: 5px; }
+    .action[aria-disabled="true"] { opacity: .65; cursor: not-allowed; }
+    .notice { margin: 20px 0 0; font-size: 15px; line-height: 1.7; }
+    .hint { margin: 4px 0 0; color: #e7dce0; font-size: 14px; line-height: 1.7; }
+    @media (max-width: 359px) {
+      .entry { padding-right: 18px; padding-left: 18px; }
+      .action { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <main aria-label="주식시장 리서치 안내">
+    <div class="artwork">
+      <img id="poster" src="./poster.png" width="933" height="1685"
+        loading="eager" fetchpriority="high" decoding="sync"
+        alt="주식시장 리서치. 시장 동향: 국내외 증시와 주요 업종의 흐름. 뉴스와 공시: 시장에 영향을 주는 핵심 소식. 종목 이슈: 관심 종목의 변화와 체크포인트.">
+    </div>
+    <section class="entry" aria-label="공유방 이동">
+      <a id="room-link" class="action" role="link" aria-disabled="true" tabindex="-1">공유방에서 확인하기</a>
+      <p id="notice" class="notice">연결 주소를 기다리고 있습니다.</p>
+      <p id="hint" class="hint">이동되지 않으면 위 버튼을 눌러주세요.</p>
+      <noscript><p class="hint">JavaScript를 사용할 수 없어 자동 이동이 중지되었습니다.</p></noscript>
+    </section>
+  </main>
+  <script id="page-config" type="application/json">
+    {"destination": "https://t.me/+3IHnJf_pE0ZmYmU9"}
+  </script>
+  <script>
+    (() => {
+      const link = document.getElementById("room-link");
+      const notice = document.getElementById("notice");
+      let target;
+      let timer;
+      let ticker;
+      const stop = () => { clearTimeout(timer); clearInterval(ticker); };
+      link.addEventListener("click", event => {
+        if (!target) event.preventDefault();
+        stop();
+      });
+      window.addEventListener("pagehide", stop);
+      window.addEventListener("pageshow", event => {
+        if (event.persisted) {
+          stop();
+          notice.textContent = "공유방에서 확인해주세요.";
+        }
+      });
+      try {
+        const config = JSON.parse(document.getElementById("page-config").textContent);
+        if (!config.destination.trim()) return;
+        const url = new URL(config.destination.trim());
+        if (url.protocol !== "https:" || url.username || url.password ||
+            url.origin + url.pathname === location.origin + location.pathname) return;
+        target = url.href;
+      } catch { return; }
+      link.href = target;
+      link.removeAttribute("aria-disabled");
+      link.removeAttribute("tabindex");
+
+      // Start only after the artwork has loaded so visitors get five visible seconds.
+      const start = async () => {
+        const poster = document.getElementById("poster");
+        if (!poster.complete || !poster.naturalWidth) {
+          notice.textContent = "자동 이동을 시작하지 못했습니다.";
+          return;
+        }
+        try { await poster.decode(); }
+        catch {
+          notice.textContent = "자동 이동을 시작하지 못했습니다.";
+          return;
+        }
+        const deadline = performance.now() + 5000;
+        const update = () => {
+          const remaining = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));
+          notice.textContent = remaining > 0
+            ? remaining + "초 후 공유방으로 자동 이동합니다."
+            : "공유방으로 이동 중입니다.";
+        };
+        update();
+        ticker = setInterval(update, 250);
+        timer = setTimeout(() => {
+          stop();
+          notice.textContent = "공유방으로 이동 중입니다.";
+          try { location.replace(target); }
+          catch { notice.textContent = "자동 이동을 완료하지 못했습니다."; }
+        }, 5000);
+        document.body.dataset.autoRunning = "true";
+      };
+      if (document.readyState === "complete") start();
+      else window.addEventListener("load", start, { once: true });
+    })();
+  </script>
+</body>
+</html>
